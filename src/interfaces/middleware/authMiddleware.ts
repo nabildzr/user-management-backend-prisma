@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 interface AuthRequest extends Request {
-  user?: string | jwt.JwtPayload;
+  user?: { id: string; email: string };
 }
 
 const authMiddleware = (
@@ -18,12 +18,17 @@ const authMiddleware = (
   }
 
   if (!process.env.JWT_SIKRIT) {
-    throw new Error("JWT belum dikonfigurasi");
+    throw new Error("JWT belum di konfigurasi");
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SIKRIT);
-    req.user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SIKRIT) as JwtPayload & { [key: string]: any };
+    const { id, email, ...rest } = decoded;
+    if (!id || !email) {
+      res.status(401).json({ error: "Invalid Token" });
+      return;
+    }
+    req.user = { id, email, ...rest };
     next();
   } catch (e) {
     res.status(401).json({ error: "Invalid Token" });
