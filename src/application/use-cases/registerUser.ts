@@ -12,7 +12,7 @@ export class RegisterUserUseCase {
   async execute(user: User): Promise<User> {
     const existingUser = await this.userRepository.findUserByEmail(user.email);
     if (existingUser) {
-      throw new Error("Email already registered");
+      throw new Error("Email sudah terdaftar");
     }
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
